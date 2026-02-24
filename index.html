@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeRide+ | Smart School Transport</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Inter',sans-serif;
+}
+
+body{
+    background:linear-gradient(135deg,#0f172a,#1e3a8a);
+    color:white;
+    height:100vh;
+    overflow:hidden;
+}
+
+/* NAVBAR */
+.navbar{
+    padding:20px 60px;
+    font-size:24px;
+    font-weight:700;
+}
+
+.navbar span{
+    color:#facc15;
+}
+
+/* MAIN LAYOUT */
+.main{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    height:calc(100vh - 70px);
+    padding:0 80px;
+    align-items:center;
+}
+
+/* LEFT TEXT */
+.left h1{
+    font-size:44px;
+    margin-bottom:20px;
+}
+
+.left p{
+    color:#cbd5e1;
+    margin-bottom:25px;
+    max-width:480px;
+}
+
+.left button{
+    padding:14px 28px;
+    border:none;
+    background:#facc15;
+    color:black;
+    font-weight:600;
+    border-radius:8px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.left button:hover{
+    background:#fde047;
+}
+
+/* RIGHT STAGE */
+.stage{
+    position:relative;
+    width:100%;
+    height:450px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+}
+
+/* ROAD */
+.road{
+    position:absolute;
+    bottom:80px;
+    width:80%;
+    height:70px;
+    background:#1f2937;
+    border-radius:8px;
+}
+
+.road::after{
+    content:"";
+    position:absolute;
+    top:50%;
+    width:100%;
+    height:4px;
+    background:repeating-linear-gradient(
+        to right,
+        white 0px,
+        white 60px,
+        transparent 60px,
+        transparent 120px
+    );
+}
+
+/* BUS */
+.bus{
+    position:absolute;
+    bottom:95px;  /* Close to road */
+    width:380px;
+    transform:translateX(140%);
+    animation:driveIn 3s ease-out forwards;
+}
+
+@keyframes driveIn{
+    to{
+        transform:translateX(0);
+    }
+}
+
+/* LOGIN CARD */
+.login-card{
+    position:absolute;
+    bottom:170px;  /* Close to bus */
+    width:320px;
+    background:white;
+    color:black;
+    padding:30px;
+    border-radius:16px;
+    box-shadow:0 20px 40px rgba(0,0,0,0.4);
+    opacity:0;
+    animation:fadeIn 1s ease forwards;
+    animation-delay:3s;
+}
+
+.login-card h2{
+    margin-bottom:15px;
+}
+
+.login-card input{
+    width:100%;
+    padding:10px;
+    margin-bottom:12px;
+    border-radius:6px;
+    border:1px solid #ddd;
+}
+
+.login-card button{
+    width:100%;
+    padding:10px;
+    border:none;
+    background:#1e3a8a;
+    color:white;
+    border-radius:6px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.login-card button:hover{
+    background:#172554;
+}
+
+.login-card a{
+    display:block;
+    text-align:center;
+    margin-top:10px;
+    font-size:14px;
+    text-decoration:none;
+    color:#1e3a8a;
+}
+
+/* FADE ANIMATION */
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(20px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+    .main{
+        grid-template-columns:1fr;
+        text-align:center;
+    }
+
+    .stage{
+        margin-top:40px;
+    }
+
+    .bus{
+        width:260px;
+    }
+
+    .login-card{
+        position:relative;
+        bottom:auto;
+        margin-top:20px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+    SafeRide<span>+</span>
+</div>
+
+<div class="main">
+
+    <div class="left">
+        <h1>Smart & Secure School Bus Management</h1>
+        <p>Modern school transportation monitoring system designed for safety, efficiency and real-time control.</p>
+        <button>Get Started</button>
+    </div>
+
+    <div class="stage">
+
+        <div class="road"></div>
+
+        <img src="busimage.png" class="bus" alt="School Bus">
+
+        <div class="login-card">
+            <h2>Login</h2>
+            <input type="text" placeholder="Email / Username">
+            <input type="password" placeholder="Password">
+            <button>Sign In</button>
+            <a href="#">Create New Account</a>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
