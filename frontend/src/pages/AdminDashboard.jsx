@@ -1,0 +1,192 @@
+import React, { useState } from 'react';
+import { Shield, UserPlus, Bus, Route as RouteIcon, Save, Settings } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
+import { addUser, addBus, addRoute } from '../services/api';
+
+const AdminDashboard = () => {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('users');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [userForm, setUserForm] = useState({ name: '', email: '', role: 'student', assignedBus: '' });
+  const [busForm, setBusForm] = useState({ busNumber: '', capacity: '' });
+  const [routeForm, setRouteForm] = useState({ source: '', destination: '' });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      if (activeTab === 'users') {
+        await addUser(userForm, user.accessToken);
+        toast.success('User added successfully');
+        setUserForm({ name: '', email: '', role: 'student', assignedBus: '' });
+      } else if (activeTab === 'buses') {
+        await addBus(busForm, user.accessToken);
+        toast.success('Bus added successfully');
+        setBusForm({ busNumber: '', capacity: '' });
+      } else if (activeTab === 'routes') {
+        await addRoute(routeForm, user.accessToken);
+        toast.success('Route added successfully');
+        setRouteForm({ source: '', destination: '' });
+      }
+    } catch (error) {
+      toast.error(`Failed to add ${activeTab.slice(0, -1)}`);
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const TabButton = ({ id, label, icon: Icon }) => (
+    <button
+      onClick={() => setActiveTab(id)}
+      className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
+        activeTab === id 
+        ? 'bg-slate-900 text-white shadow-lg' 
+        : 'text-slate-500 hover:bg-slate-100'
+      }`}
+    >
+      <Icon size={18} />
+      {label}
+    </button>
+  );
+
+  return (
+    <div className="space-y-8">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">System Administration</h1>
+          <p className="text-slate-500 mt-1">Manage users, vehicles, and network configurations.</p>
+        </div>
+        <div className="flex gap-2">
+          <TabButton id="users" label="Users" icon={UserPlus} />
+          <TabButton id="buses" label="Buses" icon={Bus} />
+          <TabButton id="routes" label="Routes" icon={RouteIcon} />
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Main Content Area */}
+        <section className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+              {activeTab === 'users' ? <UserPlus size={24} /> : activeTab === 'buses' ? <Bus size={24} /> : <Route size={24} />}
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 capitalize">Add New {activeTab.slice(0, -1)}</h2>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {activeTab === 'users' && (
+              <>
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
+                    <input required value={userForm.name} onChange={e => setUserForm({...userForm, name: e.target.value})} type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. John Doe" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
+                    <input required value={userForm.email} onChange={e => setUserForm({...userForm, email: e.target.value})} type="email" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="john@college.edu" />
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Role</label>
+                    <select value={userForm.role} onChange={e => setUserForm({...userForm, role: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                      <option value="student">Student</option>
+                      <option value="driver">Driver</option>
+                      <option value="transport_in_charge">Transport In-Charge</option>
+                      <option value="admin">Administrator</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Assigned Bus (Drivers Only)</label>
+                    <input value={userForm.assignedBus} onChange={e => setUserForm({...userForm, assignedBus: e.target.value})} type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="B-101" />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeTab === 'buses' && (
+              <div className="grid md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Bus Number</label>
+                  <input required value={busForm.busNumber} onChange={e => setBusForm({...busForm, busNumber: e.target.value})} type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="B-205" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Capacity</label>
+                  <input required value={busForm.capacity} onChange={e => setBusForm({...busForm, capacity: e.target.value})} type="number" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="50" />
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'routes' && (
+              <div className="grid md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Source</label>
+                  <input required value={routeForm.source} onChange={e => setRouteForm({...routeForm, source: e.target.value})} type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Campus Main Gate" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Destination</label>
+                  <input required value={routeForm.destination} onChange={e => setRouteForm({...routeForm, destination: e.target.value})} type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="City Center" />
+                </div>
+              </div>
+            )}
+
+            <button disabled={isSubmitting} type="submit" className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all disabled:opacity-70">
+              <Save size={18} />
+              {isSubmitting ? 'Saving...' : `Save ${activeTab.slice(0, -1)}`}
+            </button>
+          </form>
+        </section>
+
+        {/* Quick Stats & Actions */}
+        <div className="space-y-6">
+          <section className="bg-indigo-600 text-white p-8 rounded-2xl shadow-lg relative overflow-hidden">
+            <div className="relative z-10">
+              <h3 className="text-xl font-bold mb-4">Quick Overview</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 border-b border-white/10">
+                  <span className="opacity-80">Total Users</span>
+                  <span className="font-bold">1,240</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-white/10">
+                  <span className="opacity-80">Active Buses</span>
+                  <span className="font-bold">32</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="opacity-80">Pending Complaints</span>
+                  <span className="font-bold">14</span>
+                </div>
+              </div>
+            </div>
+            <Shield className="absolute -bottom-6 -right-6 text-white/10" size={140} />
+          </section>
+
+          <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Settings size={20} className="text-slate-400" />
+              Recent Logs
+            </h3>
+            <div className="space-y-4">
+              {[
+                { action: 'User Added', user: 'driver_rahul', time: '2h ago' },
+                { action: 'Bus Assigned', user: 'admin_sys', time: '5h ago' }
+              ].map((log, i) => (
+                <div key={i} className="text-sm p-3 bg-slate-50 rounded-lg">
+                  <div className="flex justify-between mb-1">
+                    <span className="font-bold text-slate-700">{log.action}</span>
+                    <span className="text-slate-400 text-xs">{log.time}</span>
+                  </div>
+                  <p className="text-slate-500">By {log.user}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminDashboard;
