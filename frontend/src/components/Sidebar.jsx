@@ -19,20 +19,22 @@ const Sidebar = () => {
   const menuItems = {
     student: [
       { name: 'Dashboard', path: '/student', icon: <LayoutDashboard size={20} /> },
-      { name: 'Report Complaint', path: '/student/complaint', icon: <MessageSquare size={20} /> },
+      { name: 'File Complaint', path: '/student/complaint', icon: <MessageSquare size={20} /> },
     ],
     driver: [
       { name: 'Dashboard', path: '/driver', icon: <LayoutDashboard size={20} /> },
       { name: 'Report Breakdown', path: '/driver/breakdown', icon: <AlertTriangle size={20} /> },
     ],
     transport_in_charge: [
-      { name: 'Dashboard', path: '/transport-in-charge', icon: <LayoutDashboard size={20} /> },
+      { name: 'Overview', path: '/transport-in-charge', icon: <LayoutDashboard size={20} /> },
       { name: 'Complaints', path: '/transport-in-charge/complaints', icon: <MessageSquare size={20} /> },
-      { name: 'Performance', path: '/transport-in-charge/performance', icon: <UserCircle size={20} /> },
+      { name: 'Driver Performance', path: '/transport-in-charge/performance', icon: <UserCircle size={20} /> },
     ],
     admin: [
       { name: 'Dashboard', path: '/admin', icon: <LayoutDashboard size={20} /> },
-      { name: 'Management', path: '/admin/manage', icon: <Shield size={20} /> },
+      { name: 'User Management', path: '/admin?tab=users', icon: <UserCircle size={20} /> },
+      { name: 'Bus Management', path: '/admin?tab=buses', icon: <Bus size={20} /> },
+      { name: 'Route Management', path: '/admin?tab=routes', icon: <Shield size={20} /> },
     ]
   };
 

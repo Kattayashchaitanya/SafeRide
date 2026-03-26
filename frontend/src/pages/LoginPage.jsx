@@ -13,7 +13,7 @@ const LoginPage = () => {
   const [selectedRole, setSelectedRole] = useState(initialRole || '');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, role } = useAuth();
+  const { login, role, user, userData } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -22,7 +22,8 @@ const LoginPage = () => {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      // Role-based redirection will happen here after state updates
+      // Failsafe to stop spinning after 4s if network or database hangs
+      setTimeout(() => setIsSubmitting(false), 4000);
     } catch (err) {
       setError('Invalid email or password');
       setIsSubmitting(false);
@@ -39,8 +40,11 @@ const LoginPage = () => {
         admin: '/admin'
       };
       navigate(paths[role] || '/');
+    } else if (user && userData === null) {
+      setError('Unable to load your profile. Please check Firebase Firestore permissions.');
+      setIsSubmitting(false);
     }
-  }, [role, navigate]);
+  }, [role, user, userData, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">

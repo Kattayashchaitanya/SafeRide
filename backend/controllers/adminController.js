@@ -15,6 +15,12 @@ const addUser = async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
+    if (role === 'driver') {
+      userData.points = 100; // Start with 100 safety points
+      userData.isBackup = req.body.isBackup || false;
+      userData.backupContact = req.body.backupContact || null;
+    }
+
     // If you want to create the user in Firebase Auth directly:
     const userRecord = await auth.createUser({
       email,

@@ -20,10 +20,19 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user) {
-        const docRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setUserData(docSnap.data());
+        try {
+          const docRef = doc(db, 'users', user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setUserData(docSnap.data());
+          } else {
+            console.error('User document does not exist in Firestore for uid:', user.uid);
+            setUserData(null);
+          }
+        } catch (error) {
+          console.error('Error fetching user data from Firestore:', error);
+          // If this is a permission error, it means Firestore rules are blocking access!
+          setUserData(null);
         }
       } else {
         setUserData(null);

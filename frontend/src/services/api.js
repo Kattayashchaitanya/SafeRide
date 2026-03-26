@@ -43,7 +43,49 @@ export const addRoute = async (routeData, token) => {
 };
 
 export const reportBreakdown = async (breakdownData, token) => {
-  const response = await axios.post(`${API_URL}/performance/breakdown`, breakdownData, {
+  const response = await axios.post(`${API_URL}/driver/breakdown`, breakdownData, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+export const logArrival = async (arrivalData, token) => {
+  const response = await axios.post(`${API_URL}/driver/log-arrival`, arrivalData, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+export const fetchNearbyBuses = async (token) => {
+  const response = await axios.get(`${API_URL}/driver/nearby`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+export const fetchInsights = async (token) => {
+  const response = await axios.get(`${API_URL}/performance/insights`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+export const deductPoints = async (penaltyData, token) => {
+  const response = await axios.post(`${API_URL}/performance/deduct`, penaltyData, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+export const resolveComplaint = async (complaintId, resolutionData, token) => {
+  const response = await axios.put(`${API_URL}/complaints/${complaintId}/resolve`, resolutionData, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+export const fetchAllPerformances = async (token) => {
+  const response = await axios.get(`${API_URL}/performance`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   return response.data;

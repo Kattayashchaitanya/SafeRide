@@ -3,13 +3,13 @@ const { db } = require('../config/firebase');
 const getDriverPerformance = async (req, res) => {
   try {
     const { driverId } = req.params;
-    const doc = await db.collection('driverPerformance').doc(driverId).get();
+    const doc = await db.collection('users').doc(driverId).get();
     
-    if (!doc.exists) {
-      return res.status(404).json({ message: 'Performance record not found' });
+    if (!doc.exists || doc.data().role !== 'driver') {
+      return res.status(404).json({ message: 'Driver not found' });
     }
     
-    res.json(doc.data());
+    res.json({ id: doc.id, ...doc.data() });
   } catch (error) {
     console.error('Error fetching performance:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -18,7 +18,7 @@ const getDriverPerformance = async (req, res) => {
 
 const getAllPerformances = async (req, res) => {
   try {
-    const snapshot = await db.collection('driverPerformance').get();
+    const snapshot = await db.collection('users').where('role', '==', 'driver').get();
     const performances = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(performances);
   } catch (error) {
@@ -27,31 +27,65 @@ const getAllPerformances = async (req, res) => {
   }
 };
 
-const reportBreakdown = async (req, res) => {
+const deductPoints = async (req, res) => {
   try {
-    const { driverId, busNumber, details } = req.body;
+    const { driverId, pointsToDeduct, reason } = req.body;
+    const driverRef = db.collection('users').doc(driverId);
     
-    // Log the breakdown
-    await db.collection('breakdowns').add({
-      driverId,
-      busNumber,
-      details,
-      status: 'active',
-      reportedAt: new Date().toISOString()
+    await db.runTransaction(async (t) => {
+      const doc = await t.get(driverRef);
+      if (!doc.exists) throw new Error('Driver not found');
+      
+      const currentPoints = doc.data().points !== undefined ? doc.data().points : 100;
+      t.update(driverRef, { points: Math.max(0, currentPoints - pointsToDeduct) });
+      
+      const penaltyRef = db.collection('penalties').doc();
+      t.set(penaltyRef, {
+        driverId,
+        pointsDeducted: pointsToDeduct,
+        reason,
+        createdAt: new Date().toISOString()
+      });
     });
 
-    // Optionally update bus status if we have a buses collection mapping
-    const busQuery = await db.collection('buses').where('busNumber', '==', busNumber).get();
-    if (!busQuery.empty) {
-      const busDoc = busQuery.docs[0];
-      await db.collection('buses').doc(busDoc.id).update({ status: 'breakdown' });
-    }
-
-    res.status(200).json({ message: 'Breakdown reported successfully' });
+    res.status(200).json({ message: 'Points deducted successfully' });
   } catch (error) {
-    console.error('Error reporting breakdown:', error);
+    console.error('Error deducting points:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-module.exports = { getDriverPerformance, getAllPerformances, reportBreakdown };
+const getInsights = async (req, res) => {
+  try {
+    // 1. Delays / Inefficient Routes
+    const arrivalsSnap = await db.collection('arrivals').where('status', '==', 'delayed').get();
+    let totalDelayMinutes = 0;
+    const delayedRoutesMap = {};
+    
+    arrivalsSnap.forEach(doc => {
+      const data = doc.data();
+      totalDelayMinutes += data.delayMinutes || 0;
+      delayedRoutesMap[data.busNumber] = (delayedRoutesMap[data.busNumber] || 0) + 1;
+    });
+
+    // 2. Overcrowded buses
+    const complaintsSnap = await db.collection('complaints').where('complaintType', '==', 'overcrowding').get();
+    const overcrowdedBusMap = {};
+    complaintsSnap.forEach(doc => {
+      const data = doc.data();
+      overcrowdedBusMap[data.busNumber] = (overcrowdedBusMap[data.busNumber] || 0) + 1;
+    });
+
+    res.status(200).json({
+      totalDelays: arrivalsSnap.size,
+      totalDelayMinutes,
+      problematicBuses: delayedRoutesMap,
+      overcrowdedBuses: overcrowdedBusMap
+    });
+  } catch (error) {
+    console.error('Error generating insights:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+module.exports = { getDriverPerformance, getAllPerformances, deductPoints, getInsights };

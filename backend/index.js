@@ -22,11 +22,13 @@ app.get('/', (req, res) => {
 const complaintRoutes = require('./routes/complaints');
 const performanceRoutes = require('./routes/performance');
 const adminRoutes = require('./routes/admin');
+const driverRoutes = require('./routes/driver');
 
 // Use routes
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/performance', performanceRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/driver', driverRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

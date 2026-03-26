@@ -10,8 +10,12 @@ import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RoleSelectionPage from './pages/RoleSelectionPage'
 import StudentDashboard from './pages/StudentDashboard'
+import StudentComplaints from './pages/StudentComplaints'
 import DriverDashboard from './pages/DriverDashboard'
+import DriverBreakdown from './pages/DriverBreakdown'
 import InChargeDashboard from './pages/InChargeDashboard'
+import InChargeComplaints from './pages/InChargeComplaints'
+import InChargePerformance from './pages/InChargePerformance'
 import AdminDashboard from './pages/AdminDashboard'
 
 // Dashboards (Placeholders)
@@ -42,22 +46,22 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['student']} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/student" element={<StudentDashboard />} />
-              <Route path="/student/complaint" element={<StudentDashboard />} />
+              <Route path="/student/complaint" element={<StudentComplaints />} />
             </Route>
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['driver']} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/driver" element={<DriverDashboard />} />
-              <Route path="/driver/breakdown" element={<DriverDashboard />} />
+              <Route path="/driver/breakdown" element={<DriverBreakdown />} />
             </Route>
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['transport_in_charge']} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/transport-in-charge" element={<InChargeDashboard />} />
-              <Route path="/transport-in-charge/complaints" element={<InChargeDashboard />} />
-              <Route path="/transport-in-charge/performance" element={<InChargeDashboard />} />
+              <Route path="/transport-in-charge/complaints" element={<InChargeComplaints />} />
+              <Route path="/transport-in-charge/performance" element={<InChargePerformance />} />
             </Route>
           </Route>
 

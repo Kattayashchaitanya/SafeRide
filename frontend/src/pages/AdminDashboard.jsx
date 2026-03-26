@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Shield, UserPlus, Bus, Route as RouteIcon, Save, Settings } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -6,7 +7,19 @@ import { addUser, addBus, addRoute } from '../services/api';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('users');
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialTab = queryParams.get('tab') || 'users';
+
+  const [activeTab, setActiveTab] = useState(initialTab || 'users');
+  
+  // Update tab if URL changes
+  useEffect(() => {
+    if (initialTab && initialTab !== activeTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [userForm, setUserForm] = useState({ name: '', email: '', role: 'student', assignedBus: '' });
@@ -71,7 +84,7 @@ const AdminDashboard = () => {
         <section className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
-              {activeTab === 'users' ? <UserPlus size={24} /> : activeTab === 'buses' ? <Bus size={24} /> : <Route size={24} />}
+              {activeTab === 'users' ? <UserPlus size={24} /> : activeTab === 'buses' ? <Bus size={24} /> : <RouteIcon size={24} />}
             </div>
             <h2 className="text-xl font-bold text-slate-900 capitalize">Add New {activeTab.slice(0, -1)}</h2>
           </div>
