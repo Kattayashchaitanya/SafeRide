@@ -30,53 +30,57 @@ const Dashboard = ({ title }) => (
   </div>
 )
 
+import { LanguageProvider } from './context/LanguageContext'
+
 function App() {
   return (
-    <AuthProvider>
-      <Toaster position="top-right" />
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/roles" element={<RoleSelectionPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/unauthorized" element={<div>Unauthorized access</div>} />
+    <LanguageProvider>
+      <AuthProvider>
+        <Toaster position="top-right" />
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/roles" element={<RoleSelectionPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/unauthorized" element={<div>Unauthorized access</div>} />
 
-          {/* Protected Dashboard Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['student']} />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="/student" element={<StudentDashboard />} />
-              <Route path="/student/complaint" element={<StudentComplaints />} />
+            {/* Protected Dashboard Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['student']} />}>
+              <Route element={<DashboardLayout />}>
+                <Route path="/student" element={<StudentDashboard />} />
+                <Route path="/student/complaint" element={<StudentComplaints />} />
+              </Route>
             </Route>
-          </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={['driver']} />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="/driver" element={<DriverDashboard />} />
-              <Route path="/driver/breakdown" element={<DriverBreakdown />} />
+            <Route element={<ProtectedRoute allowedRoles={['driver']} />}>
+              <Route element={<DashboardLayout />}>
+                <Route path="/driver" element={<DriverDashboard />} />
+                <Route path="/driver/breakdown" element={<DriverBreakdown />} />
+              </Route>
             </Route>
-          </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={['transport_in_charge']} />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="/transport-in-charge" element={<InChargeDashboard />} />
-              <Route path="/transport-in-charge/complaints" element={<InChargeComplaints />} />
-              <Route path="/transport-in-charge/performance" element={<InChargePerformance />} />
+            <Route element={<ProtectedRoute allowedRoles={['transport_in_charge']} />}>
+              <Route element={<DashboardLayout />}>
+                <Route path="/transport-in-charge" element={<InChargeDashboard />} />
+                <Route path="/transport-in-charge/complaints" element={<InChargeComplaints />} />
+                <Route path="/transport-in-charge/performance" element={<InChargePerformance />} />
+              </Route>
             </Route>
-          </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/manage" element={<AdminDashboard />} />
+            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+              <Route element={<DashboardLayout />}>
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/manage" element={<AdminDashboard />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Catch all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            {/* Catch all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </LanguageProvider>
   )
 }
 

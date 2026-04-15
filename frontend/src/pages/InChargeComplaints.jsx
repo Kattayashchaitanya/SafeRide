@@ -3,9 +3,11 @@ import { MessageSquare, CheckCircle, Clock, Loader2, AlertCircle } from 'lucide-
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { fetchComplaints, resolveComplaint } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const InChargeComplaints = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [resolvingId, setResolvingId] = useState(null);
@@ -15,7 +17,7 @@ const InChargeComplaints = () => {
       const data = await fetchComplaints(user.accessToken);
       setComplaints(data || []);
     } catch (err) {
-      toast.error('Failed to load complaints');
+      toast.error(t('load_complaints_error'));
     } finally {
       setLoading(false);
     }
@@ -29,10 +31,10 @@ const InChargeComplaints = () => {
     setResolvingId(id);
     try {
       await resolveComplaint(id, { status: 'resolved' }, user.accessToken);
-      toast.success('Complaint marked as resolved');
+      toast.success(t('complaint_resolved_success'));
       loadComplaints();
     } catch (err) {
-      toast.error('Failed to resolve complaint');
+      toast.error(t('resolve_complaint_error'));
     } finally {
       setResolvingId(null);
     }
@@ -43,8 +45,8 @@ const InChargeComplaints = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Complaints Management</h1>
-        <p className="text-slate-500 mt-1">Review and resolve issues reported by students securely.</p>
+        <h1 className="text-3xl font-bold text-slate-900">{t('complaints_management')}</h1>
+        <p className="text-slate-500 mt-1">{t('complaints_desc')}</p>
       </div>
 
       <div className="grid gap-6">
@@ -59,7 +61,7 @@ const InChargeComplaints = () => {
                   }`}>
                     {c.complaintType}
                   </span>
-                  <span className="text-sm text-slate-400 font-mono">Bus: {c.busNumber}</span>
+                  <span className="text-sm text-slate-400 font-mono">{t('bus')}: {c.busNumber}</span>
                 </div>
                 <span className="text-xs text-slate-400 flex items-center gap-1">
                   <Clock size={12} /> {new Date(c.createdAt).toLocaleDateString()}
@@ -71,7 +73,7 @@ const InChargeComplaints = () => {
               <div className="flex justify-between items-center border-t border-slate-100 pt-4">
                 <span className={`flex items-center gap-1.5 text-sm font-bold ${c.status === 'resolved' ? 'text-green-600' : 'text-amber-500'}`}>
                   {c.status === 'resolved' ? <CheckCircle size={16} /> : <Clock size={16} />}
-                  {c.status.toUpperCase()}
+                  {c.status === 'resolved' ? t('resolved').toUpperCase() : t('pending').toUpperCase()}
                 </span>
                 
                 {c.status !== 'resolved' && (
@@ -80,7 +82,7 @@ const InChargeComplaints = () => {
                     onClick={() => handleResolve(c.id)}
                     className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-slate-800 transition-all flex items-center gap-2"
                   >
-                    {resolvingId === c.id ? <Loader2 className="animate-spin" size={16} /> : 'Mark Resolved'}
+                    {resolvingId === c.id ? <Loader2 className="animate-spin" size={16} /> : t('mark_resolved')}
                   </button>
                 )}
               </div>
@@ -89,7 +91,7 @@ const InChargeComplaints = () => {
         ) : (
           <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200">
             <MessageSquare className="mx-auto text-slate-200 mb-4" size={48} />
-            <p className="text-slate-400">No complaints found. Your transport network is running smooth!</p>
+            <p className="text-slate-400">{t('no_complaints')}</p>
           </div>
         )}
       </div>

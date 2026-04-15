@@ -3,9 +3,11 @@ import { AlertTriangle, Phone, Loader2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { reportBreakdown, fetchNearbyBuses } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const DriverBreakdown = () => {
   const { user, userData } = useAuth();
+  const { t } = useLanguage();
   const [location, setLocation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [backupDrivers, setBackupDrivers] = useState([]);
@@ -35,10 +37,10 @@ const DriverBreakdown = () => {
         location
       }, user.accessToken);
       
-      toast.success('Breakdown reported! Nearby buses and the Transport Head have been alerted.');
+      toast.success(t('breakdown_reported_success'));
       setLocation('');
     } catch (error) {
-      toast.error('Failed to report breakdown.');
+      toast.error(t('breakdown_reported_error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -47,8 +49,8 @@ const DriverBreakdown = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Emergency & Breakdowns</h1>
-        <p className="text-slate-500 mt-1">Quickly alert the network and find backup assistance.</p>
+        <h1 className="text-3xl font-bold text-slate-900">{t('emergency_breakdowns')}</h1>
+        <p className="text-slate-500 mt-1">{t('emergency_desc')}</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
@@ -57,12 +59,12 @@ const DriverBreakdown = () => {
             <div className="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center">
               <AlertTriangle size={24} />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Report Breakdown</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t('report_breakdown')}</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Location / Landmark</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">{t('location_landmark')}</label>
               <input
                 required
                 type="text"
@@ -75,7 +77,7 @@ const DriverBreakdown = () => {
 
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
               <p className="text-sm text-slate-600">
-                Reporting a breakdown will automatically notify the Transport In-Charge and alert all backup drivers in the network.
+                {t('breakdown_form_desc')}
               </p>
             </div>
 
@@ -85,7 +87,7 @@ const DriverBreakdown = () => {
               className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 disabled:opacity-70"
             >
               {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <AlertTriangle size={18} />}
-              Report Emergency Breakdown
+              {t('report_emergency_breakdown')}
             </button>
           </form>
         </section>
@@ -95,7 +97,7 @@ const DriverBreakdown = () => {
             <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
               <Phone size={24} />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Backup Assistance</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t('backup_assistance')}</h2>
           </div>
 
           <div className="space-y-4">
@@ -108,7 +110,7 @@ const DriverBreakdown = () => {
                 <div key={driver.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
                   <div>
                     <h4 className="font-bold text-slate-900">{driver.name}</h4>
-                    <p className="text-xs text-slate-500">Backup Driver • Bus: {driver.assignedBus || 'N/A'}</p>
+                    <p className="text-xs text-slate-500">{t('backup_driver')} • {t('bus')}: {driver.assignedBus || t('n_a')}</p>
                   </div>
                   <a 
                     href={`tel:${driver.backupContact || '0000000000'}`}
@@ -119,7 +121,7 @@ const DriverBreakdown = () => {
                 </div>
               ))
             ) : (
-              <p className="text-center text-slate-400 py-8">No backup drivers currently registered.</p>
+              <p className="text-center text-slate-400 py-8">{t('no_backup_drivers')}</p>
             )}
           </div>
         </section>

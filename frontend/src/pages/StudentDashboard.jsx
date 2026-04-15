@@ -1,30 +1,32 @@
 import React from 'react';
 import { Info, MapPin, Bus, Clock, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Student Dashboard</h1>
-        <p className="text-slate-500 mt-1">Ready for your ride today?</p>
+        <h1 className="text-3xl font-bold text-slate-900">{t('student_dashboard')}</h1>
+        <p className="text-slate-500 mt-1">{t('ready_for_ride')}</p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
         <section className="lg:col-span-2 space-y-6">
           <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <h2 className="text-2xl font-bold text-slate-900 mb-4">Live Bus Status</h2>
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">{t('live_bus_status')}</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-primary-50 rounded-2xl border border-primary-100">
-                  <p className="text-xs text-primary-600 font-bold uppercase mb-1">Your Route</p>
+                  <p className="text-xs text-primary-600 font-bold uppercase mb-1">{t('your_route')}</p>
                   <p className="text-lg font-bold text-slate-900">Route 14 (Campus Link)</p>
                 </div>
                 <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
-                  <p className="text-xs text-green-600 font-bold uppercase mb-1">Status</p>
-                  <p className="text-lg font-bold text-slate-900">On Schedule</p>
+                  <p className="text-xs text-green-600 font-bold uppercase mb-1">{t('status')}</p>
+                  <p className="text-lg font-bold text-slate-900">{t('on_schedule')}</p>
                 </div>
               </div>
             </div>
@@ -34,7 +36,7 @@ const StudentDashboard = () => {
           <section className="bg-slate-900 text-white p-8 rounded-3xl shadow-xl">
             <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
               <Clock className="text-primary-400" />
-              Upcoming Bus Timings
+              {t('upcoming_timings')}
             </h3>
             <div className="space-y-4">
               {[
@@ -46,8 +48,8 @@ const StudentDashboard = () => {
                   <div className="flex items-center gap-4">
                     <span className="text-lg font-black">{ride.time}</span>
                     <div className="text-xs">
-                      <p className="font-bold opacity-50">Bus {ride.bus}</p>
-                      <p>To {ride.to}</p>
+                      <p className="font-bold opacity-50">{t('bus_number')} {ride.bus}</p>
+                      <p>{t('to')} {ride.to}</p>
                     </div>
                   </div>
                   <MapPin size={18} className="text-primary-400" />
@@ -63,7 +65,7 @@ const StudentDashboard = () => {
               <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
                 <Info size={24} />
               </div>
-              <h2 className="text-xl font-bold text-slate-900">Announcements</h2>
+              <h2 className="text-xl font-bold text-slate-900">{t('announcements')}</h2>
             </div>
             <div className="space-y-4">
               {[
@@ -85,7 +87,7 @@ const StudentDashboard = () => {
             <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-1">
               <AlertCircle size={24} className="text-red-400" />
             </div>
-            REPORT AN ANONYMOUS ISSUE
+            {t('report_anonymous_issue')}
           </button>
         </section>
       </div>

@@ -4,10 +4,12 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { logArrival, fetchPerformance } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 const DriverDashboard = () => {
   const { user, userData } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [isLogging, setIsLogging] = useState(false);
   const [performance, setPerformance] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -35,9 +37,9 @@ const DriverDashboard = () => {
         expectedTime: '08:30' // Planned arrival
       }, user.accessToken);
       
-      toast.success('Arrival time recorded successfully!');
+      toast.success(t('arrival_recorded_success'));
     } catch (error) {
-      toast.error('Failed to record arrival.');
+      toast.error(t('error'));
     } finally {
       setIsLogging(false);
     }
@@ -47,12 +49,12 @@ const DriverDashboard = () => {
     <div className="space-y-8">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Driver Dashboard</h1>
-          <p className="text-slate-500 mt-1">Safe travels, {userData?.name || 'Driver'}!</p>
+          <h1 className="text-3xl font-bold text-slate-900">{t('driver_dashboard')}</h1>
+          <p className="text-slate-500 mt-1">{t('welcome_driver', { name: userData?.name || t('driver') })}</p>
         </div>
         <div className="bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-100 flex items-center gap-2">
           <Star className="text-amber-500" fill="currentColor" size={20} />
-          <span className="font-bold text-slate-900">{performance?.points || 100} / 100 Safety Points</span>
+          <span className="font-bold text-slate-900">{performance?.points || 100} / 100 {t('safety_points')}</span>
         </div>
       </div>
 
@@ -60,8 +62,8 @@ const DriverDashboard = () => {
         <section className="lg:col-span-2 space-y-6">
           <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-xl relative overflow-hidden">
             <div className="relative z-10">
-              <h2 className="text-2xl font-bold mb-2">Campus Arrival Log</h2>
-              <p className="text-slate-400 mb-8">One-click recording for your arrival time at campus.</p>
+              <h2 className="text-2xl font-bold mb-2">{t('arrival_log')}</h2>
+              <p className="text-slate-400 mb-8">{t('arrival_log_desc')}</p>
               
               <button
                 disabled={isLogging}
@@ -69,7 +71,7 @@ const DriverDashboard = () => {
                 className="w-full py-6 bg-primary-500 hover:bg-primary-600 active:scale-95 transition-all rounded-2xl font-black text-xl flex items-center justify-center gap-3 shadow-lg shadow-primary-500/30"
               >
                 {isLogging ? <Loader2 className="animate-spin" size={28} /> : <CheckCircle2 size={28} />}
-                RECORD ARRIVAL NOW
+                {t('record_arrival')}
               </button>
             </div>
             <Bus className="absolute -bottom-10 -right-10 text-white/5" size={200} />
@@ -81,10 +83,10 @@ const DriverDashboard = () => {
                   <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
                     <Bus size={24} />
                   </div>
-                  <h2 className="font-bold text-slate-900">Bus Details</h2>
+                  <h2 className="font-bold text-slate-900">{t('bus_details')}</h2>
                </div>
-               <p className="text-sm text-slate-500">Number: <span className="font-bold text-slate-900">{userData?.assignedBus || 'N/A'}</span></p>
-               <p className="text-sm text-slate-500">Route: <span className="font-bold text-slate-900">Campus - City Center</span></p>
+               <p className="text-sm text-slate-500">{t('bus_number')}: <span className="font-bold text-slate-900">{userData?.assignedBus || t('n_a')}</span></p>
+               <p className="text-sm text-slate-500">{t('route_management')}: <span className="font-bold text-slate-900">Campus - City Center</span></p>
             </section>
 
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -92,16 +94,16 @@ const DriverDashboard = () => {
                   <div className="w-10 h-10 bg-green-100 text-green-600 rounded-xl flex items-center justify-center">
                     <Clock size={24} />
                   </div>
-                  <h2 className="font-bold text-slate-900">Schedule</h2>
+                  <h2 className="font-bold text-slate-900">{t('schedule')}</h2>
                </div>
-               <p className="text-sm text-slate-500">Next Shift: <span className="font-bold text-slate-900">Tomorrow 07:00 AM</span></p>
-               <p className="text-sm text-slate-500">Status: <span className="font-bold text-green-600">On Duty</span></p>
+               <p className="text-sm text-slate-500">{t('next_shift')}: <span className="font-bold text-slate-900">Tomorrow 07:00 AM</span></p>
+               <p className="text-sm text-slate-500">{t('status')}: <span className="font-bold text-green-600">{t('on_duty')}</span></p>
             </section>
           </div>
         </section>
 
         <section className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 h-fit">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">Action Center</h2>
+          <h2 className="text-xl font-bold text-slate-900 mb-6">{t('action_center')}</h2>
           <div className="space-y-4">
             <button 
               onClick={() => navigate('/driver/breakdown')}
@@ -109,12 +111,12 @@ const DriverDashboard = () => {
             >
               <div className="flex items-center gap-3">
                 <AlertTriangle size={20} />
-                <span className="font-bold">Report Emergency</span>
+                <span className="font-bold">{t('report_emergency')}</span>
               </div>
             </button>
             <div className="p-4 bg-slate-50 rounded-xl text-xs text-slate-500 leading-relaxed shadow-inner">
-              <h4 className="font-bold text-slate-900 mb-1">Safety Guidelines</h4>
-              Maintain constant speed and always yield to students at crossings.
+              <h4 className="font-bold text-slate-900 mb-1">{t('safety_guidelines')}</h4>
+              {t('safety_guidelines_desc')}
             </div>
           </div>
         </section>

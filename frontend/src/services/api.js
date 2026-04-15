@@ -14,6 +14,13 @@ export const fetchComplaints = async (token) => {
   return response.data;
 };
 
+export const fetchStats = async (token) => {
+  const response = await axios.get(`${API_URL}/admin/stats`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
 export const fetchPerformance = async (driverId, token) => {
   const response = await axios.get(`${API_URL}/performance/${driverId}`, {
     headers: { Authorization: `Bearer ${token}` }
