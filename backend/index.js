@@ -29,17 +29,30 @@ app.get('/', (req, res) => {
   res.json({ message: 'SafeRide+ API is running' });
 });
 
+// Debug route to see what the server sees
+app.use((req, res, next) => {
+  console.log(`Request to: ${req.url}`);
+  next();
+});
+
 // Import routes
 const complaintRoutes = require('./routes/complaints');
 const performanceRoutes = require('./routes/performance');
 const adminRoutes = require('./routes/admin');
 const driverRoutes = require('./routes/driver');
 
-// Use routes
-app.use('/api/complaints', complaintRoutes);
-app.use('/api/performance', performanceRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/driver', driverRoutes);
+// Use routes with both /api prefix and without (for flexibility)
+const routes = [
+  { path: '/complaints', handlers: complaintRoutes },
+  { path: '/performance', handlers: performanceRoutes },
+  { path: '/admin', handlers: adminRoutes },
+  { path: '/driver', handlers: driverRoutes }
+];
+
+routes.forEach(route => {
+  app.use(`/api${route.path}`, route.handlers);
+  app.use(route.path, route.handlers);
+});
 
 // Only listen locally, Vercel handles the server in production
 if (!process.env.VERCEL && !process.env.FUNCTION_NAME && !process.env.FUNCTIONS_EMULATOR) {
