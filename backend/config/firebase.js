@@ -27,7 +27,13 @@ if (FIREBASE_SERVICE_ACCOUNT_PATH) {
 
 // Method 2: Fallback to individual ENV variables
 if (!credential && FIREBASE_PROJECT_ID && FIREBASE_CLIENT_EMAIL && FIREBASE_PRIVATE_KEY) {
-  const privateKey = FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
+  let privateKey = FIREBASE_PRIVATE_KEY.trim();
+  // Remove surrounding quotes if they exist
+  if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+    privateKey = privateKey.substring(1, privateKey.length - 1);
+  }
+  privateKey = privateKey.replace(/\\n/g, '\n');
+  
   credential = admin.credential.cert({
     projectId: FIREBASE_PROJECT_ID,
     clientEmail: FIREBASE_CLIENT_EMAIL,
