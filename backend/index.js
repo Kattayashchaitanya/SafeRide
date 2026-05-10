@@ -17,10 +17,15 @@ app.use(express.json());
 // Routes Placeholder
 app.get('/api/health', (req, res) => {
   const firebaseStatus = require('./config/firebase').admin.apps.length > 0 ? 'Initialized' : 'Failed';
+  const envKeys = Object.keys(process.env).filter(key => 
+    key.startsWith('FIREBASE_') || key.startsWith('VITE_')
+  );
+  
   res.json({ 
     message: 'SafeRide+ API is running', 
     vercel: !!process.env.VERCEL,
     firebase: firebaseStatus,
+    detected_vars: envKeys,
     time: new Date().toISOString()
   });
 });
