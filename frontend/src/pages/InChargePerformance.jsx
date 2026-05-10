@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { UserCircle, TrendingDown, TrendingUp, AlertCircle, Loader2, MinusCircle, Users } from 'lucide-react';
+import { UserCircle, TrendingDown, TrendingUp, AlertCircle, Loader2, MinusCircle, Users, ArrowRight } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { fetchAllPerformances, deductPoints, fetchInsights } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
@@ -8,6 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 const InChargePerformance = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [drivers, setDrivers] = useState([]);
   const [insights, setInsights] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,8 @@ const InChargePerformance = () => {
     loadData();
   }, [user.accessToken]);
 
-  const handleDeduct = async (driverId) => {
+  const handleDeduct = async (e, driverId) => {
+    e.stopPropagation(); // Prevent navigation when clicking penalize button
     const reason = window.prompt(t('penalize_reason_prompt'));
     if (!reason) return;
 
@@ -104,16 +107,26 @@ const InChargePerformance = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {drivers.map((driver) => (
-                <tr key={driver.id} className="hover:bg-slate-50 transition-colors">
+                <tr 
+                  key={driver.id} 
+                  onClick={() => navigate(`/transport-in-charge/performance/${driver.id}`)}
+                  className="hover:bg-slate-50 transition-colors cursor-pointer group"
+                >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-slate-500 font-bold uppercase">
+                      <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center text-slate-500 font-bold uppercase group-hover:bg-primary-100 group-hover:text-primary-600 transition-colors">
                         {driver.name.charAt(0)}
                       </div>
-                      <span className="font-bold text-slate-900">{driver.name}</span>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-slate-900 flex items-center gap-1">
+                          {driver.name}
+                          <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-primary-600" />
+                        </span>
+                        <span className="text-xs text-slate-400">{driver.email}</span>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-slate-600 text-sm">{driver.assignedBus || t('n_a')}</td>
+                  <td className="px-6 py-4 text-slate-600 text-sm font-medium">{driver.assignedBus || t('n_a')}</td>
                   <td className="px-6 py-4 text-center">
                     <span className={`px-4 py-1.5 rounded-full font-bold text-sm ${
                       driver.points > 90 ? 'bg-green-100 text-green-600' :
@@ -125,8 +138,8 @@ const InChargePerformance = () => {
                   <td className="px-6 py-4 text-right">
                     <button
                       disabled={penalizingId === driver.id}
-                      onClick={() => handleDeduct(driver.id)}
-                      className="text-red-500 hover:text-red-700 font-bold text-sm inline-flex items-center gap-1 transition-colors"
+                      onClick={(e) => handleDeduct(e, driver.id)}
+                      className="text-red-500 hover:text-red-700 font-bold text-sm inline-flex items-center gap-1 transition-colors p-2 hover:bg-red-50 rounded-lg"
                     >
                       <MinusCircle size={16} />
                       {penalizingId === driver.id ? t('processing') : `${t('penalize')} (-5)`}

@@ -16,6 +16,7 @@ import DriverBreakdown from './pages/DriverBreakdown'
 import InChargeDashboard from './pages/InChargeDashboard'
 import InChargeComplaints from './pages/InChargeComplaints'
 import InChargePerformance from './pages/InChargePerformance'
+import DriverPerformanceDetail from './pages/DriverPerformanceDetail'
 import AdminDashboard from './pages/AdminDashboard'
 
 // Dashboards (Placeholders)
@@ -60,15 +61,16 @@ function App() {
               </Route>
             </Route>
 
-            <Route element={<ProtectedRoute allowedRoles={['transport_in_charge']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['transport_in_charge', 'admin']} />}>
               <Route element={<DashboardLayout />}>
                 <Route path="/transport-in-charge" element={<InChargeDashboard />} />
                 <Route path="/transport-in-charge/complaints" element={<InChargeComplaints />} />
                 <Route path="/transport-in-charge/performance" element={<InChargePerformance />} />
+                <Route path="/transport-in-charge/performance/:driverId" element={<DriverPerformanceDetail />} />
               </Route>
             </Route>
 
-            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['admin', 'transport_in_charge']} />}>
               <Route element={<DashboardLayout />}>
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/manage" element={<AdminDashboard />} />

@@ -14,8 +14,29 @@ export const fetchComplaints = async (token) => {
   return response.data;
 };
 
+export const fetchLatestArrivals = async (token) => {
+  const response = await axios.get(`${API_URL}/driver/arrivals`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
 export const fetchStats = async (token) => {
   const response = await axios.get(`${API_URL}/admin/stats`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+export const postAnnouncement = async (text, token) => {
+  const response = await axios.post(`${API_URL}/admin/announcement`, { text }, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+export const fetchAnnouncements = async (token) => {
+  const response = await axios.get(`${API_URL}/admin/announcements`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   return response.data;
@@ -42,6 +63,13 @@ export const addBus = async (busData, token) => {
   return response.data;
 };
 
+export const fetchBuses = async (token) => {
+  const response = await axios.get(`${API_URL}/admin/buses`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
 export const addRoute = async (routeData, token) => {
   const response = await axios.post(`${API_URL}/admin/route`, routeData, {
     headers: { Authorization: `Bearer ${token}` }
@@ -58,6 +86,20 @@ export const reportBreakdown = async (breakdownData, token) => {
 
 export const logArrival = async (arrivalData, token) => {
   const response = await axios.post(`${API_URL}/driver/log-arrival`, arrivalData, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+export const fetchActiveAlerts = async (token) => {
+  const response = await axios.get(`${API_URL}/driver/alerts`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+export const assistBreakdown = async (alertId, helperName, token) => {
+  const response = await axios.post(`${API_URL}/driver/alerts/assist`, { alertId, helperName }, {
     headers: { Authorization: `Bearer ${token}` }
   });
   return response.data;

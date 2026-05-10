@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, ShieldAlert, BarChart3, Users, Clock, ArrowUpRight, Bus, ChevronRight, CheckSquare } from 'lucide-react';
+import { Activity, ShieldAlert, BarChart3, Users, Clock, ArrowUpRight, Bus, ChevronRight, CheckSquare, Loader2, Megaphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { fetchStats } from '../services/api';
+import { fetchStats, fetchAllPerformances, fetchInsights, fetchAnnouncements } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import {
@@ -18,33 +18,58 @@ import { Bar } from 'react-chartjs-2';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const InChargeDashboard = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [stats, setStats] = useState(null);
+  const [drivers, setDrivers] = useState([]);
+  const [insights, setInsights] = useState(null);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getStats = async () => {
+    const loadDashboardData = async () => {
+      if (!token) return;
+      setLoading(true);
+      
       try {
-        const data = await fetchStats(user.accessToken);
-        setStats(data);
+        const [statsRes, driversRes, insightsRes, annRes] = await Promise.allSettled([
+          fetchStats(token),
+          fetchAllPerformances(token),
+          fetchInsights(token),
+          fetchAnnouncements(token)
+        ]);
+
+        if (statsRes.status === 'fulfilled') setStats(statsRes.value);
+        if (driversRes.status === 'fulfilled') setDrivers(driversRes.value?.slice(0, 5) || []);
+        if (insightsRes.status === 'fulfilled') setInsights(insightsRes.value);
+        if (annRes.status === 'fulfilled') setAnnouncements(annRes.value);
+
       } catch (err) {
-        console.error('Failed to fetch stats', err);
-      } finally {
-        setLoading(false);
+        console.error('In-Charge Dashboard Loading Error:', err);
       }
+
+      setLoading(false);
     };
-    if (user) getStats();
-  }, [user]);
+    if (user) loadDashboardData();
+  }, [user, token]);
 
   const chartData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     datasets: [
       {
         label: 'Delay Minutes',
-        data: [12, 19, 3, 5, 2],
-        backgroundColor: 'rgba(14, 165, 233, 0.5)',
+        data: insights?.delaysByDay ? [
+          insights.delaysByDay.Mon, 
+          insights.delaysByDay.Tue, 
+          insights.delaysByDay.Wed, 
+          insights.delaysByDay.Thu, 
+          insights.delaysByDay.Fri,
+          insights.delaysByDay.Sat,
+          insights.delaysByDay.Sun
+        ] : [0, 0, 0, 0, 0, 0, 0],
+        backgroundColor: 'rgba(14, 165, 233, 0.6)',
+        borderRadius: 8,
       },
     ],
   };
@@ -68,19 +93,12 @@ const InChargeDashboard = () => {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">{t('transport_overview')}</h1>
           <p className="text-slate-500 mt-1">{t('live_monitor')}</p>
         </div>
-        <button 
-          onClick={() => navigate('/admin?tab=buses')}
-          className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10"
-        >
-          <Bus size={18} />
-          {t('manage_fleet')}
-        </button>
       </div>
 
       {/* Stats Grid */}
@@ -100,7 +118,7 @@ const InChargeDashboard = () => {
         />
         <StatCard 
           title={t('system_delays')} 
-          value="4 mins" 
+          value={`${stats?.totalDelays || 0} arrivals`} 
           icon={Clock} 
           color="bg-amber-500" 
           trend="-20%"
@@ -156,13 +174,29 @@ const InChargeDashboard = () => {
             <h2 className="text-xl font-bold text-slate-900 mb-6">{t('efficiency_trends')}</h2>
             <div className="h-64">
               <Bar 
+                key={JSON.stringify(insights?.delaysByDay || {})}
                 data={chartData} 
                 options={{
                   responsive: true,
                   maintainAspectRatio: false,
-                  plugins: { legend: { display: false } },
+                  plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                      callbacks: {
+                        label: (context) => `${context.parsed.y} mins delayed`
+                      }
+                    }
+                  },
                   scales: { 
-                    y: { beginAtZero: true, grid: { color: '#f8fafc' } },
+                    y: { 
+                      beginAtZero: true, 
+                      max: 10,
+                      grid: { color: '#f1f5f9' },
+                      ticks: { 
+                        stepSize: 2,
+                        callback: (value) => `${value}m` 
+                      }
+                    },
                     x: { grid: { display: false } }
                   }
                 }} 
@@ -179,26 +213,33 @@ const InChargeDashboard = () => {
               {t('driver_performance')}
             </h3>
             <div className="space-y-5">
-              {[
-                { name: 'Rahul S.', rating: 4.8, status: 'Active' },
-                { name: 'Kiran K.', rating: 4.2, status: 'Active' },
-                { name: 'Sam M.', rating: 3.9, status: 'Warning' }
-              ].map((driver, i) => (
-                <div key={i} className="flex items-center justify-between group cursor-pointer">
+              {loading ? (
+                <div className="flex justify-center p-8"><Loader2 className="animate-spin text-slate-400" /></div>
+              ) : drivers.length > 0 ? drivers.map((driver) => (
+                <div 
+                  key={driver.id} 
+                  onClick={() => navigate(`/transport-in-charge/performance/${driver.id}`)}
+                  className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 p-2 -mx-2 rounded-xl transition-colors"
+                >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-500">
+                    <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-500 group-hover:bg-primary-100 group-hover:text-primary-600 transition-colors">
                       {driver.name.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-bold text-slate-900 leading-none">{driver.name}</p>
-                      <p className={`text-[10px] uppercase font-black mt-1 ${driver.status === 'Warning' ? 'text-amber-500' : 'text-green-500'}`}>
-                        {driver.status}
+                      <p className="font-bold text-slate-900 leading-none group-hover:text-primary-600 transition-colors">{driver.name}</p>
+                      <p className={`text-[10px] uppercase font-black mt-1 ${driver.points < 75 ? 'text-amber-500' : 'text-green-500'}`}>
+                        {driver.points < 75 ? 'Warning' : 'Active'}
                       </p>
                     </div>
                   </div>
-                  <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-900 transition-colors" />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-400">{driver.points || 100} pts</span>
+                    <ChevronRight size={16} className="text-slate-300 group-hover:text-slate-900 transition-colors" />
+                  </div>
                 </div>
-              ))}
+              )) : (
+                <p className="text-center text-slate-400 text-sm py-4">{t('no_drivers_found')}</p>
+              )}
             </div>
             <button 
               onClick={() => navigate('/transport-in-charge/performance')}
@@ -207,6 +248,28 @@ const InChargeDashboard = () => {
               {t('analyze_performance')}
             </button>
           </div>
+
+          {/* Global Announcements */}
+          <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+            <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <Megaphone size={20} className="text-slate-400" />
+              {t('announcements')}
+            </h3>
+            <div className="space-y-4">
+              {announcements.length === 0 ? (
+                <p className="text-sm text-slate-400 italic">No global announcements.</p>
+              ) : (
+                announcements.map((ann, i) => (
+                  <div key={i} className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                    <p className="text-[10px] font-bold text-blue-600 uppercase mb-1">
+                      {new Date(ann.date).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm text-slate-700 leading-relaxed">{ann.text}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
         </section>
       </div>
     </div>

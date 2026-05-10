@@ -8,8 +8,47 @@ const getDriverPerformance = async (req, res) => {
     if (!doc.exists || doc.data().role !== 'driver') {
       return res.status(404).json({ message: 'Driver not found' });
     }
+
+    const driverData = doc.data();
+    const busNumber = (driverData.assignedBus || '').trim();
+
+    // Fetch penalties
+    const penaltiesSnap = await db.collection('penalties')
+      .where('driverId', '==', driverId)
+      .get();
     
-    res.json({ id: doc.id, ...doc.data() });
+    const penalties = penaltiesSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // Fetch recent arrivals
+    const arrivalsSnap = await db.collection('arrivals')
+      .where('busNumber', '==', busNumber)
+      .get();
+    
+    const arrivals = arrivalsSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 10);
+
+    // Fetch complaints related to this bus
+    const complaintsSnap = await db.collection('complaints')
+      .where('busNumber', '==', busNumber)
+      .get();
+    
+    const complaints = complaintsSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    res.json({ 
+      id: doc.id, 
+      ...driverData,
+      history: {
+        penalties,
+        arrivals,
+        complaints
+      }
+    });
   } catch (error) {
     console.error('Error fetching performance:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -58,14 +97,25 @@ const deductPoints = async (req, res) => {
 const getInsights = async (req, res) => {
   try {
     // 1. Delays / Inefficient Routes
-    const arrivalsSnap = await db.collection('arrivals').where('status', '==', 'delayed').get();
+    const arrivalsSnap = await db.collection('arrivals').get();
     let totalDelayMinutes = 0;
     const delayedRoutesMap = {};
+    const delaysByDay = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     
     arrivalsSnap.forEach(doc => {
       const data = doc.data();
-      totalDelayMinutes += data.delayMinutes || 0;
-      delayedRoutesMap[data.busNumber] = (delayedRoutesMap[data.busNumber] || 0) + 1;
+      if (data.status === 'delayed') {
+        totalDelayMinutes += data.delayMinutes || 0;
+        delayedRoutesMap[data.busNumber] = (delayedRoutesMap[data.busNumber] || 0) + 1;
+      }
+      
+      // Aggregate delays by day for the chart (last 7 days)
+      const timestamp = data.timestamp ? new Date(data.timestamp) : null;
+      if (timestamp) {
+        const dayName = dayNames[timestamp.getDay()];
+        delaysByDay[dayName] += data.delayMinutes || 0;
+      }
     });
 
     // 2. Overcrowded buses
@@ -77,10 +127,11 @@ const getInsights = async (req, res) => {
     });
 
     res.status(200).json({
-      totalDelays: arrivalsSnap.size,
+      totalDelays: arrivalsSnap.docs.filter(d => d.data().status === 'delayed').length,
       totalDelayMinutes,
       problematicBuses: delayedRoutesMap,
-      overcrowdedBuses: overcrowdedBusMap
+      overcrowdedBuses: overcrowdedBusMap,
+      delaysByDay
     });
   } catch (error) {
     console.error('Error generating insights:', error);

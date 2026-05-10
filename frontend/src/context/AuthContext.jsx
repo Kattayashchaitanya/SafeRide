@@ -14,6 +14,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,6 +22,9 @@ export const AuthProvider = ({ children }) => {
       setUser(user);
       if (user) {
         try {
+          const idToken = await user.getIdToken();
+          setToken(idToken);
+          
           const docRef = doc(db, 'users', user.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
@@ -31,11 +35,11 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           console.error('Error fetching user data from Firestore:', error);
-          // If this is a permission error, it means Firestore rules are blocking access!
           setUserData(null);
         }
       } else {
         setUserData(null);
+        setToken(null);
       }
       setLoading(false);
     });
@@ -49,6 +53,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     userData,
+    token,
     loading,
     login,
     logout,

@@ -1,19 +1,41 @@
-# dependencies
-node_modules/
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+firebase-debug.log*
+firebase-debug.*.log*
 
-# environments
+# Firebase cache
+.firebase/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Build directories
+dist/
+frontend/dist/
+build/
+
+# Secrets & Environment
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# misc
-.DS_Store
-dist/
-build/
-coverage/
-.next/
-
-# secrets
+.env.production
+serviceAccount.json
 backend/serviceAccount.json
+
+# IDEs
+.vscode/
+.idea/
+
+# Vercel
+.vercel

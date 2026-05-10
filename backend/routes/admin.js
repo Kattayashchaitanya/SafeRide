@@ -1,15 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { addUser, addBus, addRoute } = require('../controllers/adminController');
+const { addUser, addBus, addRoute, getStats, addAnnouncement, getAnnouncements, getBuses } = require('../controllers/adminController');
 const { verifyToken, checkRole } = require('../middleware/auth');
 
-// Apply middleware to all routes in this file
 router.use(verifyToken);
-// Assuming admin routes are only accessible by transport in-charge or admin
-router.use(checkRole(['admin']));
 
-router.post('/user', addUser);
-router.post('/bus', addBus);
-router.post('/route', addRoute);
+// Publicly accessible for all authenticated users
+router.get('/stats', getStats);
+router.get('/announcements', getAnnouncements);
+router.get('/buses', getBuses);
+
+// Announcements (Posting)
+router.post('/announcement', checkRole(['admin', 'transport_in_charge']), addAnnouncement);
+
+// Management routes restricted to super-admin
+router.post('/user', checkRole(['admin']), addUser);
+router.post('/bus', checkRole(['admin']), addBus);
+router.post('/route', checkRole(['admin']), addRoute);
 
 module.exports = router;

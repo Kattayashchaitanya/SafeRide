@@ -1,11 +1,59 @@
-import React from 'react';
-import { Info, MapPin, Bus, Clock, AlertCircle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Info, Bus, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { fetchAnnouncements, fetchLatestArrivals, fetchActiveAlerts, fetchBuses } from '../services/api';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user, token } = useAuth();
+  const [announcements, setAnnouncements] = useState([]);
+  const [statusData, setStatusData] = useState(null);
+  const [activeAlerts, setActiveAlerts] = useState([]);
+  const [buses, setBuses] = useState([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!token) return;
+      try {
+        const results = await Promise.allSettled([
+          fetchAnnouncements(token),
+          fetchLatestArrivals(token),
+          fetchActiveAlerts(token),
+          fetchBuses(token)
+        ]);
+
+        if (results[0].status === 'fulfilled') setAnnouncements(results[0].value);
+        if (results[1].status === 'fulfilled' && results[1].value?.length > 0) setStatusData(results[1].value[0]);
+        if (results[2].status === 'fulfilled') setActiveAlerts(results[2].value?.alerts || []);
+        if (results[3].status === 'fulfilled') {
+          // Filter for active buses and remove duplicates by busNumber
+          const allBuses = results[3].value || [];
+          const activeBuses = allBuses.filter(b => b.status === 'active' || !b.status);
+          const uniqueBuses = Array.from(new Map(activeBuses.map(b => [b.busNumber, b])).values());
+          setBuses(uniqueBuses);
+        }
+      } catch (err) {
+        console.error('Failed to fetch data', err);
+      }
+    };
+    if (user) loadData();
+  }, [user, token]);
+
+  // Logic to determine live status
+  const getLiveStatus = () => {
+    if (activeAlerts.length > 0) return { label: t('emergency'), color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100' };
+    if (!statusData) return { label: t('on_schedule'), color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100' };
+    
+    // If last arrival was more than 30 mins ago, maybe show something else?
+    // For now, let's just use the delay info from last arrival
+    if (statusData.delayMinutes > 0) return { label: `${statusData.delayMinutes}m ${t('delayed')}`, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' };
+    return { label: t('on_schedule'), color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100' };
+  };
+
+  const liveStatus = getLiveStatus();
   
   return (
     <div className="space-y-8">
@@ -22,11 +70,13 @@ const StudentDashboard = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-primary-50 rounded-2xl border border-primary-100">
                   <p className="text-xs text-primary-600 font-bold uppercase mb-1">{t('your_route')}</p>
-                  <p className="text-lg font-bold text-slate-900">Route 14 (Campus Link)</p>
+                  <p className="text-lg font-bold text-slate-900">
+                    {statusData ? `Bus ${statusData.busNumber}` : 'B-101 (Standard)'}
+                  </p>
                 </div>
-                <div className="p-4 bg-green-50 rounded-2xl border border-green-100">
-                  <p className="text-xs text-green-600 font-bold uppercase mb-1">{t('status')}</p>
-                  <p className="text-lg font-bold text-slate-900">{t('on_schedule')}</p>
+                <div className={`p-4 ${liveStatus.bg} rounded-2xl border ${liveStatus.border}`}>
+                  <p className={`text-xs ${liveStatus.color} font-bold uppercase mb-1`}>{t('status')}</p>
+                  <p className="text-lg font-bold text-slate-900">{liveStatus.label}</p>
                 </div>
               </div>
             </div>
@@ -35,26 +85,31 @@ const StudentDashboard = () => {
 
           <section className="bg-slate-900 text-white p-8 rounded-3xl shadow-xl">
             <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <Clock className="text-primary-400" />
-              {t('upcoming_timings')}
+              <Bus className="text-primary-400" />
+              {t('bus_details')}
             </h3>
             <div className="space-y-4">
-              {[
-                { time: '08:45 AM', bus: 'B-102', to: 'Main Gate' },
-                { time: '09:15 AM', bus: 'B-204', to: 'Admin Block' },
-                { time: '04:30 PM', bus: 'B-102', to: 'City Center' }
-              ].map((ride, i) => (
-                <div key={i} className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/10">
-                  <div className="flex items-center gap-4">
-                    <span className="text-lg font-black">{ride.time}</span>
-                    <div className="text-xs">
-                      <p className="font-bold opacity-50">{t('bus_number')} {ride.bus}</p>
-                      <p>{t('to')} {ride.to}</p>
+              {buses.length === 0 ? (
+                <p className="text-center text-white/40 py-8 italic">{t('no_buses_found')}</p>
+              ) : (
+                buses.map((item, i) => (
+                  <div key={i} className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/10">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-xl font-black">
+                        {item.busNumber?.split('-')[1] || item.busNumber}
+                      </div>
+                      <div>
+                        <p className="font-bold text-white">{t('bus')} {item.busNumber}</p>
+                        <p className="text-xs text-white/50">{t('capacity')}: {item.capacity}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] uppercase font-black text-primary-400 mb-1">{t('status')}</p>
+                      <p className="text-xs font-bold text-green-400 capitalize">{item.status || 'Active'}</p>
                     </div>
                   </div>
-                  <MapPin size={18} className="text-primary-400" />
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </section>
         </section>
@@ -68,15 +123,18 @@ const StudentDashboard = () => {
               <h2 className="text-xl font-bold text-slate-900">{t('announcements')}</h2>
             </div>
             <div className="space-y-4">
-              {[
-                { date: 'Oct 24', text: 'Bus Route 5 is slightly delayed today.' },
-                { date: 'Oct 23', text: 'New hygiene checks implemented across all buses.' }
-              ].map((ann, i) => (
-                <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-[10px] font-bold text-primary-600 uppercase">{ann.date}</span>
-                  <p className="text-sm text-slate-600 mt-0.5">{ann.text}</p>
-                </div>
-              ))}
+              {announcements.length === 0 ? (
+                <p className="text-sm text-slate-400 italic">No announcements yet.</p>
+              ) : (
+                announcements.map((ann, i) => (
+                  <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span className="text-[10px] font-bold text-primary-600 uppercase">
+                      {new Date(ann.date).toLocaleDateString()}
+                    </span>
+                    <p className="text-sm text-slate-600 mt-0.5">{ann.text}</p>
+                  </div>
+                ))
+              )}
             </div>
           </section>
 

@@ -1,3 +1,4 @@
+const functions = require('firebase-functions');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -30,6 +31,12 @@ app.use('/api/performance', performanceRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/driver', driverRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Only listen locally, Vercel handles the server in production
+if (!process.env.VERCEL && !process.env.FUNCTION_NAME && !process.env.FUNCTIONS_EMULATOR) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+// Export for Vercel and other serverless platforms
+module.exports = app;
