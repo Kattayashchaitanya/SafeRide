@@ -15,6 +15,16 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 // Routes Placeholder
+app.get('/api/health', (req, res) => {
+  const firebaseStatus = require('./config/firebase').admin.apps.length > 0 ? 'Initialized' : 'Failed';
+  res.json({ 
+    message: 'SafeRide+ API is running', 
+    vercel: !!process.env.VERCEL,
+    firebase: firebaseStatus,
+    time: new Date().toISOString()
+  });
+});
+
 app.get('/', (req, res) => {
   res.json({ message: 'SafeRide+ API is running' });
 });
